@@ -125,7 +125,7 @@ describe('Topic e2e test', () => {
         cy.url().should('match', topicPageUrlPattern);
       });
 
-      it.skip('edit button click should load edit Topic page and save', () => {
+      it('edit button click should load edit Topic page and save', () => {
         cy.get(entityEditButtonSelector).first().click();
         cy.getEntityCreateUpdateHeading('Topic');
         cy.get(entityCreateSaveButtonSelector).click();

@@ -1,0 +1,124 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-message-heading" data-cy="MessageCreateUpdateHeading" jhiTranslate="forumApp.message.home.createOrEditLabel">
+        Créer ou éditer un Message
+      </h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        <div class="row mb-3" *ngIf="editForm.controls.id.value !== null">
+          <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
+          <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.subject" for="field_subject">Subject</label>
+          <input type="text" class="form-control" name="subject" id="field_subject" data-cy="subject" formControlName="subject" />
+          <div *ngIf="editForm.get('subject')!.invalid && (editForm.get('subject')!.dirty || editForm.get('subject')!.touched)">
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('subject')?.errors?.required"
+              jhiTranslate="entity.validation.required"
+            >
+              Ce champ est obligatoire.
+            </small>
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('subject')?.errors?.minlength"
+              jhiTranslate="entity.validation.minlength"
+              [translateValues]="{ min: 5 }"
+            >
+              Ce champ doit faire au minimum 5 caractères.
+            </small>
+            <small
+              class="form-text text-danger"
+              *ngIf="editForm.get('subject')?.errors?.maxlength"
+              jhiTranslate="entity.validation.maxlength"
+              [translateValues]="{ max: 80 }"
+            >
+              Ce champ doit faire moins de 80 caractères.
+            </small>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.content" for="field_content">Content</label>
+          <input type="text" class="form-control" name="content" id="field_content" data-cy="content" formControlName="content" />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.postDate" for="field_postDate">Post Date</label>
+          <div class="input-group">
+            <input
+              id="field_postDate"
+              data-cy="postDate"
+              type="text"
+              class="form-control"
+              name="postDate"
+              ngbDatepicker
+              #postDateDp="ngbDatepicker"
+              formControlName="postDate"
+            />
+            <button type="button" class="btn btn-secondary" (click)="postDateDp.toggle()"><fa-icon icon="calendar-alt"></fa-icon></button>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.author" for="field_author">Author</label>
+          <select
+            class="form-control"
+            id="field_author"
+            data-cy="author"
+            name="author"
+            formControlName="author"
+            [compareWith]="compareUser"
+          >
+            <option [ngValue]="null"></option>
+            <option [ngValue]="userOption" *ngFor="let userOption of usersSharedCollection">{{ userOption.login }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.topic" for="field_topic">Topic</label>
+          <select class="form-control" id="field_topic" data-cy="topic" name="topic" formControlName="topic" [compareWith]="compareTopic">
+            <option [ngValue]="null"></option>
+            <option [ngValue]="topicOption" *ngFor="let topicOption of topicsSharedCollection">{{ topicOption.titre }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="forumApp.message.message" for="field_message">Message</label>
+          <select
+            class="form-control"
+            id="field_message"
+            data-cy="message"
+            name="message"
+            formControlName="message"
+            [compareWith]="compareMessage"
+          >
+            <option [ngValue]="null"></option>
+            <option [ngValue]="messageOption" *ngFor="let messageOption of messagesSharedCollection">{{ messageOption.id }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Annuler</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Sauvegarder</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

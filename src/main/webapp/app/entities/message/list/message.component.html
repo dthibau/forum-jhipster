@@ -1,0 +1,138 @@
+<div>
+  <h2 id="page-heading" data-cy="MessageHeading">
+    <span jhiTranslate="forumApp.message.home.title">Messages</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span jhiTranslate="forumApp.message.home.refreshListLabel">Actualiser la liste</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-message"
+        [routerLink]="['/message/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="forumApp.message.home.createLabel"> Créer un nouveau Message </span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <div class="alert alert-warning" id="no-result" *ngIf="messages?.length === 0">
+    <span jhiTranslate="forumApp.message.home.notFound">Aucun Message trouvé</span>
+  </div>
+
+  <div class="table-responsive table-entities" id="entities" *ngIf="messages && messages.length > 0">
+    <table class="table table-striped" aria-describedby="page-heading">
+      <thead>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="subject">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.subject">Subject</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="content">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.content">Content</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="postDate">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.postDate">Post Date</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="author.login">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.author">Author</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="topic.titre">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.topic">Topic</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="message.id">
+            <div class="d-flex">
+              <span jhiTranslate="forumApp.message.message">Message</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody
+        infinite-scroll
+        (scrolled)="loadPage(page + 1)"
+        [infiniteScrollDisabled]="page - 1 >= links['last']"
+        [infiniteScrollDistance]="0"
+      >
+        <tr *ngFor="let message of messages; trackBy: trackId" data-cy="entityTable">
+          <td>
+            <a [routerLink]="['/message', message.id, 'view']">{{ message.id }}</a>
+          </td>
+          <td>{{ message.subject }}</td>
+          <td>{{ message.content }}</td>
+          <td>{{ message.postDate | formatMediumDate }}</td>
+          <td>
+            {{ message.author?.login }}
+          </td>
+          <td>
+            <div *ngIf="message.topic">
+              <a [routerLink]="['/topic', message.topic.id, 'view']">{{ message.topic.titre }}</a>
+            </div>
+          </td>
+          <td>
+            <div *ngIf="message.message">
+              <a [routerLink]="['/message', message.message.id, 'view']">{{ message.message.id }}</a>
+            </div>
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <button
+                type="submit"
+                [routerLink]="['/message', message.id, 'view']"
+                class="btn btn-info btn-sm"
+                data-cy="entityDetailsButton"
+              >
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.view">Voir</span>
+              </button>
+
+              <button
+                type="submit"
+                [routerLink]="['/message', message.id, 'edit']"
+                class="btn btn-primary btn-sm"
+                data-cy="entityEditButton"
+              >
+                <fa-icon icon="pencil-alt"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Editer</span>
+              </button>
+
+              <button type="submit" (click)="delete(message)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Supprimer</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

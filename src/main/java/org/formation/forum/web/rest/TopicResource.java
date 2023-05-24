@@ -9,9 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.formation.forum.domain.Topic;
 import org.formation.forum.repository.TopicRepository;
-import org.formation.forum.service.TopicQueryService;
 import org.formation.forum.service.TopicService;
-import org.formation.forum.service.criteria.TopicCriteria;
 import org.formation.forum.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -44,12 +43,9 @@ public class TopicResource {
 
     private final TopicRepository topicRepository;
 
-    private final TopicQueryService topicQueryService;
-
-    public TopicResource(TopicService topicService, TopicRepository topicRepository, TopicQueryService topicQueryService) {
+    public TopicResource(TopicService topicService, TopicRepository topicRepository) {
         this.topicService = topicService;
         this.topicRepository = topicRepository;
-        this.topicQueryService = topicQueryService;
     }
 
     /**
@@ -144,30 +140,14 @@ public class TopicResource {
      * {@code GET  /topics} : get all the topics.
      *
      * @param pageable the pagination information.
-     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of topics in body.
      */
     @GetMapping("/topics")
-    public ResponseEntity<List<Topic>> getAllTopics(
-        TopicCriteria criteria,
-        @org.springdoc.api.annotations.ParameterObject Pageable pageable
-    ) {
-        log.debug("REST request to get Topics by criteria: {}", criteria);
-        Page<Topic> page = topicQueryService.findByCriteria(criteria, pageable);
+    public ResponseEntity<List<Topic>> getAllTopics(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
+        log.debug("REST request to get a page of Topics");
+        Page<Topic> page = topicService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
-    }
-
-    /**
-     * {@code GET  /topics/count} : count all the topics.
-     *
-     * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
-     */
-    @GetMapping("/topics/count")
-    public ResponseEntity<Long> countTopics(TopicCriteria criteria) {
-        log.debug("REST request to count Topics by criteria: {}", criteria);
-        return ResponseEntity.ok().body(topicQueryService.countByCriteria(criteria));
     }
 
     /**

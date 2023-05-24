@@ -171,6 +171,12 @@ You can execute automated [lighthouse audits][https://developers.google.com/web/
 You should only run the audits when your application is packaged with the production profile.
 The lighthouse report is created in `target/cypress/lhreport.html`
 
+### Other tests
+
+Performance tests are run by [Gatling][] and written in Scala. They're located in [src/test/gatling](src/test/gatling).
+
+To use those tests, you must install Gatling from [https://gatling.io/](https://gatling.io/).
+
 For more information, refer to the [Running tests page][].
 
 ### E2E Webapp Code Coverage
@@ -277,3 +283,4 @@ To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`)
 [leaflet]: https://leafletjs.com/
 [definitelytyped]: https://definitelytyped.org/
 [angular cli]: https://cli.angular.io/
+[gatling]: https://gatling.io/

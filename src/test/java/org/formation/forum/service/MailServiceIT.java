@@ -40,7 +40,6 @@ class MailServiceIT {
 
     private static final String[] languages = {
         "fr",
-        "en",
         // jhipster-needle-i18n-language-constant - JHipster will add/remove languages in this array
     };
     private static final Pattern PATTERN_LOCALE_3 = Pattern.compile("([a-z]{2})-([a-zA-Z]{4})-([a-z]{2})");

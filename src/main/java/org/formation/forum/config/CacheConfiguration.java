@@ -49,6 +49,8 @@ public class CacheConfiguration {
             createCache(cm, org.formation.forum.domain.Authority.class.getName());
             createCache(cm, org.formation.forum.domain.User.class.getName() + ".authorities");
             createCache(cm, org.formation.forum.domain.Topic.class.getName());
+            createCache(cm, org.formation.forum.domain.Message.class.getName());
+            createCache(cm, org.formation.forum.domain.Message.class.getName() + ".responses");
             // jhipster-needle-ehcache-add-entry
         };
     }

@@ -1,0 +1,52 @@
+/**
+ * JHipster JDL model for forum
+ */
+
+application {
+  config {
+    packageName org.formation.forum
+    baseName forum
+    applicationType monolith
+    databaseType sql
+    devDatabaseType h2Memory
+    prodDatabaseType postgresql
+    authenticationType jwt
+    testFrameworks [cypress, cucumber, gatling]
+    clientTheme cyborg
+  }
+  entities *
+}
+
+// ==============================
+// Entity definitions starts here
+// ==============================
+entity Topic {
+    titre String required minlength(5) maxlength(80)
+    description String
+}
+
+entity Message {
+    subject String required minlength(5) maxlength(80)
+    content String
+    postDate LocalDate
+}
+
+relationship ManyToOne {
+	Message{author(login)} to User,
+	Message{topic(titre)} to Topic
+}
+
+relationship OneToMany {
+	Message{responses} to Message
+}
+
+paginate Message with infinite-scroll
+paginate Topic with pagination
+
+// =======
+// Options
+// =======
+
+service Topic with serviceClass
+
+
