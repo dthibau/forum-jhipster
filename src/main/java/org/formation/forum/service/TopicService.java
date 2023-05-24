@@ -54,6 +54,7 @@ public class TopicService {
      * @return the persisted entity.
      */
     public Optional<Topic> partialUpdate(Topic topic) {
+        log.debug("Juste modifying partial update", topic);
         log.debug("Request to partially update Topic : {}", topic);
 
         return topicRepository
@@ -103,5 +104,9 @@ public class TopicService {
     public void delete(Long id) {
         log.debug("Request to delete Topic : {}", id);
         topicRepository.deleteById(id);
+    }
+
+    public String HelloWorld() {
+        return "Hello World";
     }
 }
