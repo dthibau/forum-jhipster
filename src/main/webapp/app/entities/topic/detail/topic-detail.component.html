@@ -1,0 +1,36 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="topic">
+      <h2 data-cy="topicDetailsHeading"><span jhiTranslate="forumApp.topic.detail.title">Topic</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ topic.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="forumApp.topic.titre">Titre</span></dt>
+        <dd>
+          <span>{{ topic.titre }}</span>
+        </dd>
+        <dt><span jhiTranslate="forumApp.topic.description">Description</span></dt>
+        <dd>
+          <span>{{ topic.description }}</span>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Retour</span>
+      </button>
+
+      <button type="button" [routerLink]="['/topic', topic.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Editer</span>
+      </button>
+    </div>
+  </div>
+</div>
