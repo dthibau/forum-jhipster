@@ -1,7 +1,7 @@
 {
   "applications": ["forum"],
   "changelogDate": "20230524124232",
-  "dto": "no",
+  "dto": "mapstruct",
   "embedded": false,
   "entityTableName": "message",
   "fields": [
@@ -14,7 +14,8 @@
     },
     {
       "fieldName": "content",
-      "fieldType": "String"
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
     },
     {
       "fieldName": "postDate",
@@ -52,5 +53,5 @@
       "relationshipType": "many-to-one"
     }
   ],
-  "service": "no"
+  "service": "serviceClass"
 }

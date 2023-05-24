@@ -13,11 +13,11 @@ export const sampleWithPartialData: ITopic = {
 export const sampleWithFullData: ITopic = {
   id: 86027,
   titre: 'cXXXX',
-  description: 'invoice',
+  description: '../fake-data/blob/hipster.txt',
 };
 
 export const sampleWithNewData: NewTopic = {
-  titre: 'de bX',
+  titre: 'invoice',
   id: null,
 };
 

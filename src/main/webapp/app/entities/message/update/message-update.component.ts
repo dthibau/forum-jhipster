@@ -7,6 +7,9 @@ import { finalize, map } from 'rxjs/operators';
 import { MessageFormService, MessageFormGroup } from './message-form.service';
 import { IMessage } from '../message.model';
 import { MessageService } from '../service/message.service';
+import { AlertError } from 'app/shared/alert/alert-error.model';
+import { EventManager, EventWithContent } from 'app/core/util/event-manager.service';
+import { DataUtils, FileLoadError } from 'app/core/util/data-util.service';
 import { IUser } from 'app/entities/user/user.model';
 import { UserService } from 'app/entities/user/user.service';
 import { ITopic } from 'app/entities/topic/topic.model';
@@ -27,6 +30,8 @@ export class MessageUpdateComponent implements OnInit {
   editForm: MessageFormGroup = this.messageFormService.createMessageFormGroup();
 
   constructor(
+    protected dataUtils: DataUtils,
+    protected eventManager: EventManager,
     protected messageService: MessageService,
     protected messageFormService: MessageFormService,
     protected userService: UserService,
@@ -48,6 +53,21 @@ export class MessageUpdateComponent implements OnInit {
       }
 
       this.loadRelationshipsOptions();
+    });
+  }
+
+  byteSize(base64String: string): string {
+    return this.dataUtils.byteSize(base64String);
+  }
+
+  openFile(base64String: string, contentType: string | null | undefined): void {
+    this.dataUtils.openFile(base64String, contentType);
+  }
+
+  setFileData(event: Event, field: string, isImage: boolean): void {
+    this.dataUtils.loadFileToForm(event, this.editForm, field, isImage).subscribe({
+      error: (err: FileLoadError) =>
+        this.eventManager.broadcast(new EventWithContent<AlertError>('forumApp.error', { ...err, key: 'error.file.' + err.key })),
     });
   }
 

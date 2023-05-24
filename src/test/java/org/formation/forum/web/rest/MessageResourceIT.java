@@ -16,6 +16,9 @@ import javax.persistence.EntityManager;
 import org.formation.forum.IntegrationTest;
 import org.formation.forum.domain.Message;
 import org.formation.forum.repository.MessageRepository;
+import org.formation.forum.service.MessageService;
+import org.formation.forum.service.dto.MessageDTO;
+import org.formation.forum.service.mapper.MessageMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Base64Utils;
 
 /**
  * Integration tests for the {@link MessageResource} REST controller.
@@ -60,6 +64,12 @@ class MessageResourceIT {
 
     @Mock
     private MessageRepository messageRepositoryMock;
+
+    @Autowired
+    private MessageMapper messageMapper;
+
+    @Mock
+    private MessageService messageServiceMock;
 
     @Autowired
     private EntityManager em;
@@ -101,8 +111,9 @@ class MessageResourceIT {
     void createMessage() throws Exception {
         int databaseSizeBeforeCreate = messageRepository.findAll().size();
         // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
         restMessageMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(message)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(messageDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Message in the database
@@ -119,12 +130,13 @@ class MessageResourceIT {
     void createMessageWithExistingId() throws Exception {
         // Create the Message with an existing ID
         message.setId(1L);
+        MessageDTO messageDTO = messageMapper.toDto(message);
 
         int databaseSizeBeforeCreate = messageRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restMessageMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(message)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(messageDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Message in the database
@@ -140,9 +152,10 @@ class MessageResourceIT {
         message.setSubject(null);
 
         // Create the Message, which fails.
+        MessageDTO messageDTO = messageMapper.toDto(message);
 
         restMessageMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(message)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(messageDTO)))
             .andExpect(status().isBadRequest());
 
         List<Message> messageList = messageRepository.findAll();
@@ -162,22 +175,22 @@ class MessageResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(message.getId().intValue())))
             .andExpect(jsonPath("$.[*].subject").value(hasItem(DEFAULT_SUBJECT)))
-            .andExpect(jsonPath("$.[*].content").value(hasItem(DEFAULT_CONTENT)))
+            .andExpect(jsonPath("$.[*].content").value(hasItem(DEFAULT_CONTENT.toString())))
             .andExpect(jsonPath("$.[*].postDate").value(hasItem(DEFAULT_POST_DATE.toString())));
     }
 
     @SuppressWarnings({ "unchecked" })
     void getAllMessagesWithEagerRelationshipsIsEnabled() throws Exception {
-        when(messageRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+        when(messageServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
 
         restMessageMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
 
-        verify(messageRepositoryMock, times(1)).findAllWithEagerRelationships(any());
+        verify(messageServiceMock, times(1)).findAllWithEagerRelationships(any());
     }
 
     @SuppressWarnings({ "unchecked" })
     void getAllMessagesWithEagerRelationshipsIsNotEnabled() throws Exception {
-        when(messageRepositoryMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
+        when(messageServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
 
         restMessageMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
         verify(messageRepositoryMock, times(1)).findAll(any(Pageable.class));
@@ -196,7 +209,7 @@ class MessageResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(message.getId().intValue()))
             .andExpect(jsonPath("$.subject").value(DEFAULT_SUBJECT))
-            .andExpect(jsonPath("$.content").value(DEFAULT_CONTENT))
+            .andExpect(jsonPath("$.content").value(DEFAULT_CONTENT.toString()))
             .andExpect(jsonPath("$.postDate").value(DEFAULT_POST_DATE.toString()));
     }
 
@@ -220,12 +233,13 @@ class MessageResourceIT {
         // Disconnect from session so that the updates on updatedMessage are not directly saved in db
         em.detach(updatedMessage);
         updatedMessage.subject(UPDATED_SUBJECT).content(UPDATED_CONTENT).postDate(UPDATED_POST_DATE);
+        MessageDTO messageDTO = messageMapper.toDto(updatedMessage);
 
         restMessageMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, updatedMessage.getId())
+                put(ENTITY_API_URL_ID, messageDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(updatedMessage))
+                    .content(TestUtil.convertObjectToJsonBytes(messageDTO))
             )
             .andExpect(status().isOk());
 
@@ -244,12 +258,15 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restMessageMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, message.getId())
+                put(ENTITY_API_URL_ID, messageDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(message))
+                    .content(TestUtil.convertObjectToJsonBytes(messageDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -264,12 +281,15 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMessageMockMvc
             .perform(
                 put(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(message))
+                    .content(TestUtil.convertObjectToJsonBytes(messageDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -284,9 +304,12 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMessageMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(message)))
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(messageDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Message in the database
@@ -360,12 +383,15 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restMessageMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, message.getId())
+                patch(ENTITY_API_URL_ID, messageDTO.getId())
                     .contentType("application/merge-patch+json")
-                    .content(TestUtil.convertObjectToJsonBytes(message))
+                    .content(TestUtil.convertObjectToJsonBytes(messageDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -380,12 +406,15 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMessageMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType("application/merge-patch+json")
-                    .content(TestUtil.convertObjectToJsonBytes(message))
+                    .content(TestUtil.convertObjectToJsonBytes(messageDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -400,9 +429,14 @@ class MessageResourceIT {
         int databaseSizeBeforeUpdate = messageRepository.findAll().size();
         message.setId(count.incrementAndGet());
 
+        // Create the Message
+        MessageDTO messageDTO = messageMapper.toDto(message);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMessageMockMvc
-            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(message)))
+            .perform(
+                patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(messageDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Message in the database

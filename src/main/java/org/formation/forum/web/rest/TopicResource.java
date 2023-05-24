@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import org.formation.forum.domain.Topic;
 import org.formation.forum.repository.TopicRepository;
 import org.formation.forum.service.TopicService;
+import org.formation.forum.service.dto.TopicDTO;
 import org.formation.forum.web.rest.errors.BadRequestAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,17 +51,17 @@ public class TopicResource {
     /**
      * {@code POST  /topics} : Create a new topic.
      *
-     * @param topic the topic to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new topic, or with status {@code 400 (Bad Request)} if the topic has already an ID.
+     * @param topicDTO the topicDTO to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new topicDTO, or with status {@code 400 (Bad Request)} if the topic has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/topics")
-    public ResponseEntity<Topic> createTopic(@Valid @RequestBody Topic topic) throws URISyntaxException {
-        log.debug("REST request to save Topic : {}", topic);
-        if (topic.getId() != null) {
+    public ResponseEntity<TopicDTO> createTopic(@Valid @RequestBody TopicDTO topicDTO) throws URISyntaxException {
+        log.debug("REST request to save Topic : {}", topicDTO);
+        if (topicDTO.getId() != null) {
             throw new BadRequestAlertException("A new topic cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Topic result = topicService.save(topic);
+        TopicDTO result = topicService.save(topicDTO);
         return ResponseEntity
             .created(new URI("/api/topics/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -71,21 +71,23 @@ public class TopicResource {
     /**
      * {@code PUT  /topics/:id} : Updates an existing topic.
      *
-     * @param id the id of the topic to save.
-     * @param topic the topic to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated topic,
-     * or with status {@code 400 (Bad Request)} if the topic is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the topic couldn't be updated.
+     * @param id the id of the topicDTO to save.
+     * @param topicDTO the topicDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated topicDTO,
+     * or with status {@code 400 (Bad Request)} if the topicDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the topicDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/topics/{id}")
-    public ResponseEntity<Topic> updateTopic(@PathVariable(value = "id", required = false) final Long id, @Valid @RequestBody Topic topic)
-        throws URISyntaxException {
-        log.debug("REST request to update Topic : {}, {}", id, topic);
-        if (topic.getId() == null) {
+    public ResponseEntity<TopicDTO> updateTopic(
+        @PathVariable(value = "id", required = false) final Long id,
+        @Valid @RequestBody TopicDTO topicDTO
+    ) throws URISyntaxException {
+        log.debug("REST request to update Topic : {}, {}", id, topicDTO);
+        if (topicDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, topic.getId())) {
+        if (!Objects.equals(id, topicDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
@@ -93,34 +95,34 @@ public class TopicResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Topic result = topicService.update(topic);
+        TopicDTO result = topicService.update(topicDTO);
         return ResponseEntity
             .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, topic.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, topicDTO.getId().toString()))
             .body(result);
     }
 
     /**
      * {@code PATCH  /topics/:id} : Partial updates given fields of an existing topic, field will ignore if it is null
      *
-     * @param id the id of the topic to save.
-     * @param topic the topic to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated topic,
-     * or with status {@code 400 (Bad Request)} if the topic is not valid,
-     * or with status {@code 404 (Not Found)} if the topic is not found,
-     * or with status {@code 500 (Internal Server Error)} if the topic couldn't be updated.
+     * @param id the id of the topicDTO to save.
+     * @param topicDTO the topicDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated topicDTO,
+     * or with status {@code 400 (Bad Request)} if the topicDTO is not valid,
+     * or with status {@code 404 (Not Found)} if the topicDTO is not found,
+     * or with status {@code 500 (Internal Server Error)} if the topicDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/topics/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public ResponseEntity<Topic> partialUpdateTopic(
+    public ResponseEntity<TopicDTO> partialUpdateTopic(
         @PathVariable(value = "id", required = false) final Long id,
-        @NotNull @RequestBody Topic topic
+        @NotNull @RequestBody TopicDTO topicDTO
     ) throws URISyntaxException {
-        log.debug("REST request to partial update Topic partially : {}, {}", id, topic);
-        if (topic.getId() == null) {
+        log.debug("REST request to partial update Topic partially : {}, {}", id, topicDTO);
+        if (topicDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        if (!Objects.equals(id, topic.getId())) {
+        if (!Objects.equals(id, topicDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
@@ -128,11 +130,11 @@ public class TopicResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<Topic> result = topicService.partialUpdate(topic);
+        Optional<TopicDTO> result = topicService.partialUpdate(topicDTO);
 
         return ResponseUtil.wrapOrNotFound(
             result,
-            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, topic.getId().toString())
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, topicDTO.getId().toString())
         );
     }
 
@@ -143,9 +145,9 @@ public class TopicResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of topics in body.
      */
     @GetMapping("/topics")
-    public ResponseEntity<List<Topic>> getAllTopics(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<TopicDTO>> getAllTopics(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
         log.debug("REST request to get a page of Topics");
-        Page<Topic> page = topicService.findAll(pageable);
+        Page<TopicDTO> page = topicService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -153,20 +155,20 @@ public class TopicResource {
     /**
      * {@code GET  /topics/:id} : get the "id" topic.
      *
-     * @param id the id of the topic to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the topic, or with status {@code 404 (Not Found)}.
+     * @param id the id of the topicDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the topicDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/topics/{id}")
-    public ResponseEntity<Topic> getTopic(@PathVariable Long id) {
+    public ResponseEntity<TopicDTO> getTopic(@PathVariable Long id) {
         log.debug("REST request to get Topic : {}", id);
-        Optional<Topic> topic = topicService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(topic);
+        Optional<TopicDTO> topicDTO = topicService.findOne(id);
+        return ResponseUtil.wrapOrNotFound(topicDTO);
     }
 
     /**
      * {@code DELETE  /topics/:id} : delete the "id" topic.
      *
-     * @param id the id of the topic to delete.
+     * @param id the id of the topicDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/topics/{id}")

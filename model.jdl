@@ -22,12 +22,12 @@ application {
 // ==============================
 entity Topic {
     titre String required minlength(5) maxlength(80)
-    description String
+    description TextBlob
 }
 
 entity Message {
     subject String required minlength(5) maxlength(80)
-    content String
+    content TextBlob
     postDate LocalDate
 }
 
@@ -46,6 +46,7 @@ paginate Topic with pagination
 // =======
 // Options
 // =======
+dto * with mapstruct
 
 service Topic with serviceClass
 

@@ -15,7 +15,7 @@ describe('Message e2e test', () => {
   const messagePageUrlPattern = new RegExp('/message(\\?.*)?$');
   const username = Cypress.env('E2E_USERNAME') ?? 'user';
   const password = Cypress.env('E2E_PASSWORD') ?? 'user';
-  const messageSample = { subject: 'Gorgeous' };
+  const messageSample = { subject: 'sticky withdrawal' };
 
   let message;
 
@@ -162,9 +162,12 @@ describe('Message e2e test', () => {
     it('should create an instance of Message', () => {
       cy.get(`[data-cy="subject"]`).type('multi-byte back la').should('have.value', 'multi-byte back la');
 
-      cy.get(`[data-cy="content"]`).type('action-items Baby').should('have.value', 'action-items Baby');
+      cy.get(`[data-cy="content"]`)
+        .type('../fake-data/blob/hipster.txt')
+        .invoke('val')
+        .should('match', new RegExp('../fake-data/blob/hipster.txt'));
 
-      cy.get(`[data-cy="postDate"]`).type('2023-05-24').blur().should('have.value', '2023-05-24');
+      cy.get(`[data-cy="postDate"]`).type('2023-05-23').blur().should('have.value', '2023-05-23');
 
       cy.get(entityCreateSaveButtonSelector).click();
 

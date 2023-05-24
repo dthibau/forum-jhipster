@@ -15,7 +15,7 @@ describe('Topic e2e test', () => {
   const topicPageUrlPattern = new RegExp('/topic(\\?.*)?$');
   const username = Cypress.env('E2E_USERNAME') ?? 'user';
   const password = Cypress.env('E2E_PASSWORD') ?? 'user';
-  const topicSample = { titre: 'Chine programming' };
+  const topicSample = { titre: 'Analyste Account' };
 
   let topic;
 
@@ -162,7 +162,10 @@ describe('Topic e2e test', () => {
     it('should create an instance of Topic', () => {
       cy.get(`[data-cy="titre"]`).type('Account website').should('have.value', 'Account website');
 
-      cy.get(`[data-cy="description"]`).type('Analyste Account').should('have.value', 'Analyste Account');
+      cy.get(`[data-cy="description"]`)
+        .type('../fake-data/blob/hipster.txt')
+        .invoke('val')
+        .should('match', new RegExp('../fake-data/blob/hipster.txt'));
 
       cy.get(entityCreateSaveButtonSelector).click();
 

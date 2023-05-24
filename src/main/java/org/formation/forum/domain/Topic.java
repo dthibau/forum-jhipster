@@ -5,6 +5,7 @@ import javax.persistence.*;
 import javax.validation.constraints.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Type;
 
 /**
  * A Topic.
@@ -28,6 +29,8 @@ public class Topic implements Serializable {
     @Column(name = "titre", length = 80, nullable = false)
     private String titre;
 
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     @Column(name = "description")
     private String description;
 

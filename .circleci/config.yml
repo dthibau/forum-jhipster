@@ -1,0 +1,70 @@
+version: 2.1
+jobs:
+  build:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: large
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "package-lock.json" }}
+            # Perform a Partial Cache Restore (https://circleci.com/docs/2.0/caching/#restoring-cache)
+            - v1-dependencies-
+      - run:
+          name: Print Java Version
+          command: 'java -version'
+      - run:
+          name: Print Node Version
+          command: 'node -v'
+      - run:
+          name: Print NPM Version
+          command: 'npm -v'
+      - run:
+          name: Install Node Modules
+          command: 'npm install'
+      - run:
+          name: Install Snyk CLI
+          command: |
+            curl -Lo ./snyk $(curl -s https://api.github.com/repos/snyk/snyk/releases/latest | grep "browser_download_url.*snyk-linux" | cut -d ':' -f 2,3 | tr -d \" | tr -d ' ')
+            chmod +x snyk
+      - run:
+          name: Snyk test
+          command: './snyk test --all-projects || true'
+      - run:
+          name: Snyk monitor
+          command: './snyk monitor --all-projects'
+      - save_cache:
+          paths:
+            - node
+            - node_modules
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}-{{ checksum "package-lock.json" }}
+
+      - run:
+          name: Give Executable Power
+          command: 'chmod +x mvnw'
+      - run:
+          name: Backend tests
+          command: npm run ci:backend:test
+      - run:
+          name: Run Front End Tests
+          command: npm run ci:frontend:test
+      - run:
+          name: Deploy to Heroku
+          command: './mvnw -ntp com.heroku.sdk:heroku-maven-plugin:2.0.5:deploy -DskipTests -Pprod -Dheroku.buildpacks=heroku/jvm -Dheroku.appName=forum'
+      # - run:
+      #     name: 'E2E: Package'
+      #     command: npm run ci:e2e:package
+      # - run:
+      #     name: 'E2E: Prepare'
+      #     command: npm run ci:e2e:prepare
+      # - run:
+      #     name: 'E2E: Run'
+      #     command: npm run ci:e2e:run
+      #     environment:
+      #       CYPRESS_ENABLE_RECORD: false
+      # - run:
+      #     name: 'E2E: Teardown'
+      #     command: npm run ci:e2e:teardown

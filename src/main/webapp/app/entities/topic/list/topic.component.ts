@@ -10,6 +10,7 @@ import { ITEMS_PER_PAGE, PAGE_HEADER, TOTAL_COUNT_RESPONSE_HEADER } from 'app/co
 import { ASC, DESC, SORT, ITEM_DELETED_EVENT, DEFAULT_SORT_DATA } from 'app/config/navigation.constants';
 import { EntityArrayResponseType, TopicService } from '../service/topic.service';
 import { TopicDeleteDialogComponent } from '../delete/topic-delete-dialog.component';
+import { DataUtils } from 'app/core/util/data-util.service';
 
 @Component({
   selector: 'jhi-topic',
@@ -30,6 +31,7 @@ export class TopicComponent implements OnInit {
     protected topicService: TopicService,
     protected activatedRoute: ActivatedRoute,
     public router: Router,
+    protected dataUtils: DataUtils,
     protected modalService: NgbModal
   ) {}
 
@@ -37,6 +39,14 @@ export class TopicComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  byteSize(base64String: string): string {
+    return this.dataUtils.byteSize(base64String);
+  }
+
+  openFile(base64String: string, contentType: string | null | undefined): void {
+    return this.dataUtils.openFile(base64String, contentType);
   }
 
   delete(topic: ITopic): void {

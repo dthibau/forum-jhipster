@@ -12,6 +12,8 @@ import javax.persistence.EntityManager;
 import org.formation.forum.IntegrationTest;
 import org.formation.forum.domain.Topic;
 import org.formation.forum.repository.TopicRepository;
+import org.formation.forum.service.dto.TopicDTO;
+import org.formation.forum.service.mapper.TopicMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Base64Utils;
 
 /**
  * Integration tests for the {@link TopicResource} REST controller.
@@ -43,6 +46,9 @@ class TopicResourceIT {
 
     @Autowired
     private TopicRepository topicRepository;
+
+    @Autowired
+    private TopicMapper topicMapper;
 
     @Autowired
     private EntityManager em;
@@ -84,8 +90,9 @@ class TopicResourceIT {
     void createTopic() throws Exception {
         int databaseSizeBeforeCreate = topicRepository.findAll().size();
         // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
         restTopicMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topic)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topicDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Topic in the database
@@ -101,12 +108,13 @@ class TopicResourceIT {
     void createTopicWithExistingId() throws Exception {
         // Create the Topic with an existing ID
         topic.setId(1L);
+        TopicDTO topicDTO = topicMapper.toDto(topic);
 
         int databaseSizeBeforeCreate = topicRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restTopicMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topic)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topicDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Topic in the database
@@ -122,9 +130,10 @@ class TopicResourceIT {
         topic.setTitre(null);
 
         // Create the Topic, which fails.
+        TopicDTO topicDTO = topicMapper.toDto(topic);
 
         restTopicMockMvc
-            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topic)))
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topicDTO)))
             .andExpect(status().isBadRequest());
 
         List<Topic> topicList = topicRepository.findAll();
@@ -144,7 +153,7 @@ class TopicResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(topic.getId().intValue())))
             .andExpect(jsonPath("$.[*].titre").value(hasItem(DEFAULT_TITRE)))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)));
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())));
     }
 
     @Test
@@ -160,7 +169,7 @@ class TopicResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(topic.getId().intValue()))
             .andExpect(jsonPath("$.titre").value(DEFAULT_TITRE))
-            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION));
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()));
     }
 
     @Test
@@ -183,12 +192,13 @@ class TopicResourceIT {
         // Disconnect from session so that the updates on updatedTopic are not directly saved in db
         em.detach(updatedTopic);
         updatedTopic.titre(UPDATED_TITRE).description(UPDATED_DESCRIPTION);
+        TopicDTO topicDTO = topicMapper.toDto(updatedTopic);
 
         restTopicMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, updatedTopic.getId())
+                put(ENTITY_API_URL_ID, topicDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(updatedTopic))
+                    .content(TestUtil.convertObjectToJsonBytes(topicDTO))
             )
             .andExpect(status().isOk());
 
@@ -206,12 +216,15 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restTopicMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, topic.getId())
+                put(ENTITY_API_URL_ID, topicDTO.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(topic))
+                    .content(TestUtil.convertObjectToJsonBytes(topicDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -226,12 +239,15 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restTopicMockMvc
             .perform(
                 put(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(topic))
+                    .content(TestUtil.convertObjectToJsonBytes(topicDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -246,9 +262,12 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restTopicMockMvc
-            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topic)))
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(topicDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Topic in the database
@@ -320,12 +339,15 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
         restTopicMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, topic.getId())
+                patch(ENTITY_API_URL_ID, topicDTO.getId())
                     .contentType("application/merge-patch+json")
-                    .content(TestUtil.convertObjectToJsonBytes(topic))
+                    .content(TestUtil.convertObjectToJsonBytes(topicDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -340,12 +362,15 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restTopicMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, count.incrementAndGet())
                     .contentType("application/merge-patch+json")
-                    .content(TestUtil.convertObjectToJsonBytes(topic))
+                    .content(TestUtil.convertObjectToJsonBytes(topicDTO))
             )
             .andExpect(status().isBadRequest());
 
@@ -360,9 +385,12 @@ class TopicResourceIT {
         int databaseSizeBeforeUpdate = topicRepository.findAll().size();
         topic.setId(count.incrementAndGet());
 
+        // Create the Topic
+        TopicDTO topicDTO = topicMapper.toDto(topic);
+
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restTopicMockMvc
-            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(topic)))
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(topicDTO)))
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Topic in the database

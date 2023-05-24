@@ -72,7 +72,7 @@ class TopicGatlingTest extends Simulation {
             .headers(headers_http_authenticated)
             .body(StringBody("""{
                 "titre":"SAMPLE_TEXT"
-                , "description":"SAMPLE_TEXT"
+                , "description":null
                 }""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_topic_url"))).exitHereIfFailed

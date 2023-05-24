@@ -72,7 +72,7 @@ class MessageGatlingTest extends Simulation {
             .headers(headers_http_authenticated)
             .body(StringBody("""{
                 "subject":"SAMPLE_TEXT"
-                , "content":"SAMPLE_TEXT"
+                , "content":null
                 , "postDate":"2020-01-01T00:00:00.000Z"
                 }""")).asJson
             .check(status.is(201))

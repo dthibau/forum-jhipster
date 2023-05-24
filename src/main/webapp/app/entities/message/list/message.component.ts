@@ -10,6 +10,7 @@ import { ITEMS_PER_PAGE } from 'app/config/pagination.constants';
 import { ASC, DESC, SORT, ITEM_DELETED_EVENT, DEFAULT_SORT_DATA } from 'app/config/navigation.constants';
 import { EntityArrayResponseType, MessageService } from '../service/message.service';
 import { MessageDeleteDialogComponent } from '../delete/message-delete-dialog.component';
+import { DataUtils } from 'app/core/util/data-util.service';
 import { ParseLinks } from 'app/core/util/parse-links.service';
 
 @Component({
@@ -34,6 +35,7 @@ export class MessageComponent implements OnInit {
     protected activatedRoute: ActivatedRoute,
     public router: Router,
     protected parseLinks: ParseLinks,
+    protected dataUtils: DataUtils,
     protected modalService: NgbModal
   ) {}
 
@@ -52,6 +54,14 @@ export class MessageComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  byteSize(base64String: string): string {
+    return this.dataUtils.byteSize(base64String);
+  }
+
+  openFile(base64String: string, contentType: string | null | undefined): void {
+    return this.dataUtils.openFile(base64String, contentType);
   }
 
   delete(message: IMessage): void {

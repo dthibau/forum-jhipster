@@ -3,6 +3,8 @@ package org.formation.forum.service;
 import java.util.Optional;
 import org.formation.forum.domain.Topic;
 import org.formation.forum.repository.TopicRepository;
+import org.formation.forum.service.dto.TopicDTO;
+import org.formation.forum.service.mapper.TopicMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,54 +23,57 @@ public class TopicService {
 
     private final TopicRepository topicRepository;
 
-    public TopicService(TopicRepository topicRepository) {
+    private final TopicMapper topicMapper;
+
+    public TopicService(TopicRepository topicRepository, TopicMapper topicMapper) {
         this.topicRepository = topicRepository;
+        this.topicMapper = topicMapper;
     }
 
     /**
      * Save a topic.
      *
-     * @param topic the entity to save.
+     * @param topicDTO the entity to save.
      * @return the persisted entity.
      */
-    public Topic save(Topic topic) {
-        log.debug("Request to save Topic : {}", topic);
-        return topicRepository.save(topic);
+    public TopicDTO save(TopicDTO topicDTO) {
+        log.debug("Request to save Topic : {}", topicDTO);
+        Topic topic = topicMapper.toEntity(topicDTO);
+        topic = topicRepository.save(topic);
+        return topicMapper.toDto(topic);
     }
 
     /**
      * Update a topic.
      *
-     * @param topic the entity to save.
+     * @param topicDTO the entity to save.
      * @return the persisted entity.
      */
-    public Topic update(Topic topic) {
-        log.debug("Request to update Topic : {}", topic);
-        return topicRepository.save(topic);
+    public TopicDTO update(TopicDTO topicDTO) {
+        log.debug("Request to update Topic : {}", topicDTO);
+        Topic topic = topicMapper.toEntity(topicDTO);
+        topic = topicRepository.save(topic);
+        return topicMapper.toDto(topic);
     }
 
     /**
      * Partially update a topic.
      *
-     * @param topic the entity to update partially.
+     * @param topicDTO the entity to update partially.
      * @return the persisted entity.
      */
-    public Optional<Topic> partialUpdate(Topic topic) {
-        log.debug("Request to partially update Topic : {}", topic);
+    public Optional<TopicDTO> partialUpdate(TopicDTO topicDTO) {
+        log.debug("Request to partially update Topic : {}", topicDTO);
 
         return topicRepository
-            .findById(topic.getId())
+            .findById(topicDTO.getId())
             .map(existingTopic -> {
-                if (topic.getTitre() != null) {
-                    existingTopic.setTitre(topic.getTitre());
-                }
-                if (topic.getDescription() != null) {
-                    existingTopic.setDescription(topic.getDescription());
-                }
+                topicMapper.partialUpdate(existingTopic, topicDTO);
 
                 return existingTopic;
             })
-            .map(topicRepository::save);
+            .map(topicRepository::save)
+            .map(topicMapper::toDto);
     }
 
     /**
@@ -78,9 +83,9 @@ public class TopicService {
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public Page<Topic> findAll(Pageable pageable) {
+    public Page<TopicDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Topics");
-        return topicRepository.findAll(pageable);
+        return topicRepository.findAll(pageable).map(topicMapper::toDto);
     }
 
     /**
@@ -90,9 +95,9 @@ public class TopicService {
      * @return the entity.
      */
     @Transactional(readOnly = true)
-    public Optional<Topic> findOne(Long id) {
+    public Optional<TopicDTO> findOne(Long id) {
         log.debug("Request to get Topic : {}", id);
-        return topicRepository.findById(id);
+        return topicRepository.findById(id).map(topicMapper::toDto);
     }
 
     /**

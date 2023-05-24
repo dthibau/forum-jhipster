@@ -7,6 +7,9 @@ import { finalize } from 'rxjs/operators';
 import { TopicFormService, TopicFormGroup } from './topic-form.service';
 import { ITopic } from '../topic.model';
 import { TopicService } from '../service/topic.service';
+import { AlertError } from 'app/shared/alert/alert-error.model';
+import { EventManager, EventWithContent } from 'app/core/util/event-manager.service';
+import { DataUtils, FileLoadError } from 'app/core/util/data-util.service';
 
 @Component({
   selector: 'jhi-topic-update',
@@ -19,6 +22,8 @@ export class TopicUpdateComponent implements OnInit {
   editForm: TopicFormGroup = this.topicFormService.createTopicFormGroup();
 
   constructor(
+    protected dataUtils: DataUtils,
+    protected eventManager: EventManager,
     protected topicService: TopicService,
     protected topicFormService: TopicFormService,
     protected activatedRoute: ActivatedRoute
@@ -30,6 +35,21 @@ export class TopicUpdateComponent implements OnInit {
       if (topic) {
         this.updateForm(topic);
       }
+    });
+  }
+
+  byteSize(base64String: string): string {
+    return this.dataUtils.byteSize(base64String);
+  }
+
+  openFile(base64String: string, contentType: string | null | undefined): void {
+    this.dataUtils.openFile(base64String, contentType);
+  }
+
+  setFileData(event: Event, field: string, isImage: boolean): void {
+    this.dataUtils.loadFileToForm(event, this.editForm, field, isImage).subscribe({
+      error: (err: FileLoadError) =>
+        this.eventManager.broadcast(new EventWithContent<AlertError>('forumApp.error', { ...err, key: 'error.file.' + err.key })),
     });
   }
 

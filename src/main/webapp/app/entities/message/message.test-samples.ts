@@ -16,12 +16,12 @@ export const sampleWithPartialData: IMessage = {
 export const sampleWithFullData: IMessage = {
   id: 56535,
   subject: 'b action-items',
-  content: 'projection',
-  postDate: dayjs('2023-05-23'),
+  content: '../fake-data/blob/hipster.txt',
+  postDate: dayjs('2023-05-24'),
 };
 
 export const sampleWithNewData: NewMessage = {
-  subject: 'invoice aggregate Gambie',
+  subject: 'cross-platform',
   id: null,
 };
 
