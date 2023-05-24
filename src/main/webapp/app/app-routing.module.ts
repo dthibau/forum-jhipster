@@ -7,6 +7,7 @@ import { DEBUG_INFO_ENABLED } from 'app/app.constants';
 import { Authority } from 'app/config/authority.constants';
 
 import { UserRouteAccessService } from 'app/core/auth/user-route-access.service';
+import { ExampleComponent } from './custom/example/example.component';
 
 @NgModule({
   imports: [
@@ -19,6 +20,10 @@ import { UserRouteAccessService } from 'app/core/auth/user-route-access.service'
           },
           canActivate: [UserRouteAccessService],
           loadChildren: () => import('./admin/admin-routing.module').then(m => m.AdminRoutingModule),
+        },
+        {
+          path: 'exemple',
+          component: ExampleComponent,
         },
         {
           path: 'account',

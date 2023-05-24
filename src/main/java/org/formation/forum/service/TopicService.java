@@ -54,7 +54,7 @@ public class TopicService {
      * @return the persisted entity.
      */
     public Optional<Topic> partialUpdate(Topic topic) {
-        log.debug("Juste modifying partial update", topic);
+        log.debug("Just modifying partial update", topic);
         log.debug("Request to partially update Topic : {}", topic);
 
         return topicRepository
